@@ -7,15 +7,33 @@
 
 <body>
 
-<div id="joinScreen">
+<div id="menu">
+
 <h1>Dare Royale</h1>
-<input id="nameInput" placeholder="Your name">
-<button onclick="join()">Join</button>
+
+<input id="nameInput" placeholder="Nickname">
+
+<select id="gender">
+<option value="boy">Dude</option>
+<option value="girl">Dudette</option>
+</select>
+
+<br><br>
+
+<button onclick="createParty()">Create Party</button>
+
+<br><br>
+
+<input id="codeInput" placeholder="Party Code">
+
+<button onclick="joinParty()">Join Party</button>
+
 </div>
 
 <div id="lobby" class="hidden">
 
 <h2>Lobby</h2>
+<h3>Party Code: <span id="lobbyCode"></span></h3>
 
 <h3>Players</h3>
 <ul id="playerList"></ul>

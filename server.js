@@ -5,73 +5,79 @@ const io = require("socket.io")(http);
 
 app.use(express.static("public"));
 
-let players = [];
-let host = null;
-let phase = "lobby";
-let timer = 0;
-let interval;
+let parties = {};
+
+function generateCode() {
+    return Math.random().toString(36).substring(2,6).toUpperCase();
+}
 
 io.on("connection", (socket) => {
 
-    socket.on("join", (name) => {
+    socket.on("createParty", ({name, gender}) => {
 
-        if (!host) host = socket.id;
+        const code = generateCode();
 
-        players.push({
-            id: socket.id,
-            name: name
-        });
+        parties[code] = {
+            host: socket.id,
+            players: [],
+            phase: "lobby"
+        };
 
-        socket.emit("host", socket.id === host);
-
-        io.emit("players", players);
-        io.emit("phase", phase);
+        joinParty(socket, code, name, gender, true);
     });
 
-    socket.on("startGame", () => {
-        if (socket.id !== host) return;
+    socket.on("joinParty", ({code, name, gender}) => {
 
-        phase = "writing";
-        startTimer(150);
+        if (!parties[code]) return;
 
-        io.emit("phase", phase);
+        joinParty(socket, code, name, gender, false);
+    });
+
+    socket.on("startGame", (code) => {
+
+        const party = parties[code];
+        if (!party) return;
+        if (party.host !== socket.id) return;
+
+        party.phase = "writing";
+
+        io.to(code).emit("phase", "writing");
     });
 
     socket.on("disconnect", () => {
 
-        players = players.filter(p => p.id !== socket.id);
+        for (const code in parties) {
 
-        if (socket.id === host && players.length > 0) {
-            host = players[0].id;
+            const party = parties[code];
+
+            party.players = party.players.filter(p => p.id !== socket.id);
+
+            io.to(code).emit("players", party.players);
         }
 
-        io.emit("players", players);
     });
 
 });
 
-function startTimer(seconds) {
+function joinParty(socket, code, name, gender, isHost) {
 
-    timer = seconds;
+    const party = parties[code];
 
-    clearInterval(interval);
+    const player = {
+        id: socket.id,
+        name,
+        gender,
+        lives: 1
+    };
 
-    interval = setInterval(() => {
+    party.players.push(player);
 
-        timer--;
+    socket.join(code);
 
-        io.emit("timer", timer);
+    socket.emit("partyCode", code);
+    socket.emit("host", isHost);
 
-        if (timer <= 0) {
-
-            clearInterval(interval);
-
-            phase = "playing";
-
-            io.emit("phase", phase);
-        }
-
-    }, 1000);
+    io.to(code).emit("players", party.players);
 }
 
 http.listen(3000, () => {

@@ -1,5 +1,7 @@
 const socket = io();
 
+let partyCode = null;
+
 let isHost = false;
 
 function join() {
@@ -13,6 +15,33 @@ function join() {
     document.getElementById("joinScreen").classList.add("hidden");
     document.getElementById("lobby").classList.remove("hidden");
 }
+
+function createParty() {
+
+    const name = document.getElementById("nameInput").value;
+    const gender = document.getElementById("gender").value;
+
+    socket.emit("createParty", {name, gender});
+}
+
+function joinParty() {
+
+    const name = document.getElementById("nameInput").value;
+    const gender = document.getElementById("gender").value;
+    const code = document.getElementById("codeInput").value.toUpperCase();
+
+    socket.emit("joinParty", {name, gender, code});
+}
+
+socket.on("partyCode", (code) => {
+
+    partyCode = code;
+
+    document.getElementById("menu").classList.add("hidden");
+    document.getElementById("lobby").classList.remove("hidden");
+
+    document.getElementById("lobbyCode").innerText = code;
+});
 
 socket.on("host", (value) => {
 
