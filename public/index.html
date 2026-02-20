@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dare Royale</title>
+</head>
+<body>
+  <h1>Dare Royale</h1>
+
+  <div id="menu">
+    <input id="nickname" placeholder="Nickname" />
+    <select id="gender">
+      <option value="boy">Boy</option>
+      <option value="girl">Girl</option>
+    </select>
+    <button onclick="createRoom()">Create Party</button>
+    <input id="roomCode" placeholder="Room Code"/>
+    <button onclick="joinRoom()">Join Party</button>
+  </div>
+
+  <div id="game"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="client.js"></script>
+</body>
+</html>
