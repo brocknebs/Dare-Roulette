@@ -91,6 +91,5 @@ socket.on("timer", (time) => {
 });
 
 function startGame() {
-
-    socket.emit("startGame");
+    socket.emit("startGame", partyCode);
 }
