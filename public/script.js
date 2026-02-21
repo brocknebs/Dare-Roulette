@@ -77,12 +77,13 @@ socket.on("players", (players) => {
 
         const li = document.createElement("li");
 
-        li.textContent = p.name;
+        li.textContent = `${p.name} (${p.lives})`;
 
         list.appendChild(li);
     });
 
 });
+
 
 socket.on("dares", (dares) => {
 

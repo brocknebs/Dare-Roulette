@@ -13,6 +13,32 @@ function generateCode() {
 
 io.on("connection", (socket) => {
 
+    socket.on("loseLife", ({code, playerId}) => {
+
+        const party = parties[code];
+        if (!party) return;
+
+        const player = party.players.find(p => p.id === playerId);
+        if (!player) return;
+
+        player.lives--;
+
+        io.to(code).emit("players", party.players);
+    });
+
+    socket.on("gainLife", ({code, playerId}) => {
+
+        const party = parties[code];
+        if (!party) return;
+
+        const player = party.players.find(p => p.id === playerId);
+        if (!player) return;
+
+        player.lives++;
+
+        io.to(code).emit("players", party.players);
+    });
+
     socket.on("submitDare", ({code, dare}) => {
 
         const party = parties[code];
@@ -48,16 +74,23 @@ io.on("connection", (socket) => {
 
     socket.on("startGame", (code) => {
 
-    const party = parties[code];
-    if (!party) return;
-    if (party.host !== socket.id) return;
+        const party = parties[code];
+        if (!party) return;
+        if (party.host !== socket.id) return;
 
-    party.phase = "writing";
+        party.players.forEach(p => {
+            p.lives = 1;
+        });
 
-    io.to(code).emit("phase", "writing");
+        io.to(code).emit("players", party.players);
 
-    startWritingTimer(code, 150); // 2.5 minutes
-});
+        party.phase = "writing";
+
+        io.to(code).emit("phase", "writing");
+
+        startWritingTimer(code, 150);
+    });
+
 
     socket.on("disconnect", () => {
 
