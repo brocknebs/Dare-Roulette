@@ -47,6 +47,38 @@ function submitDare() {
     document.getElementById("dareInput").value = "";
 }
 
+function passGame(playerId) {
+    socket.emit("gainLife", {
+        code: partyCode,
+        playerId: playerId
+    });
+
+    socket.emit("nextTurn", partyCode);
+}
+
+function failGame(playerId) {
+    socket.emit("loseLife", {
+        code: partyCode,
+        playerId: playerId
+    });
+
+    socket.emit("nextTurn", partyCode);
+}
+
+function versusWinner(winnerId, loserId) {
+
+    socket.emit("gainLife", {
+        code: partyCode,
+        playerId: winnerId
+    });
+
+    socket.emit("loseLife", {
+        code: partyCode,
+        playerId: loserId
+    });
+
+    socket.emit("nextTurn", partyCode);
+}
 
 socket.on("partyCode", (code) => {
 
@@ -58,15 +90,67 @@ socket.on("partyCode", (code) => {
     document.getElementById("lobbyCode").innerText = code;
 });
 
-socket.on("turn", ({player, game}) => {
+socket.on("turn", ({player, opponent, game}) => {
 
     const area = document.getElementById("miniGameArea");
 
-    area.innerHTML =
-        "<h2>" + player.name + "'s turn</h2>" +
-        "<h3>Game: " + game + "</h3>";
-});
+    if (game === "two truths and a lie") {
 
+        area.innerHTML = `
+            <h2>${player.name}'s Turn</h2>
+            <h3>Two Truths and a Lie</h3>
+            <p>
+            ${player.name} has to pick 2 truths and a lie.
+            The group votes to guess the lie.
+            If they guess incorrectly ${player.name} GAINS a life.
+            HOWEVER. If they guess correctly, ${player.name} LOSES a life.
+            </p>
+            <button onclick="passGame('${player.id}')">Pass</button>
+            <button onclick="failGame('${player.id}')">Fail</button>
+        `;
+
+    } else if (game === "arm wrestle" && opponent) {
+
+        area.innerHTML = `
+            <h2>Arm Wrestle</h2>
+            <p>
+            ${player.name} must arm wrestle ${opponent.name}.
+            Rules are simple, winner gains a life and loser give up a life.
+            We want a nice clean match. Or don't. We really don't care.
+            </p>
+            <button onclick="versusWinner('${player.id}','${opponent.id}')">
+                ${player.name}
+            </button>
+            <button onclick="versusWinner('${opponent.id}','${player.id}')">
+                ${opponent.name}
+            </button>
+        `;
+
+    } else if (game === "draw off" && opponent) {
+
+        area.innerHTML = `
+            <h2>Draw Off</h2>
+            <p>
+            ${player.name} and ${opponent.name} must draw a picture in 30 seconds.
+            The group votes on the best picture.
+            The artist with the most magnificent masterpiece gains a life
+            and the wash up artist give up a life.
+            </p>
+            <button onclick="versusWinner('${player.id}','${opponent.id}')">
+                ${player.name}
+            </button>
+            <button onclick="versusWinner('${opponent.id}','${player.id}')">
+                ${opponent.name}
+            </button>
+        `;
+
+    } else {
+
+        area.innerHTML =
+            "<h2>" + player.name + "'s turn</h2>" +
+            "<h3>Game: " + game + "</h3>";
+    }
+});
 
 socket.on("host", (value) => {
 

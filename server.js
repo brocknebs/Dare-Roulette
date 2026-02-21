@@ -8,18 +8,16 @@ app.use(express.static("public"));
 let parties = {};
 
 const miniGames = [
-"Trivia",
 "Arm Wrestle",
-"Next Dude",
-"Next Dudette",
 "Automatic Dare",
+"Stone Face",
 "Two Truths and a Lie",
 "Cars",
 "Rhymes",
 "Draw Off",
+"Categories",
 "Pick Someone To Do a Dare",
-"Reach For The Sky",
-"Team Vote"
+"Reach For The Sky"
 ];
 
 function startTurn(code) {
@@ -30,6 +28,19 @@ function startTurn(code) {
     if (party.players.length === 0) return;
 
     const player = party.players[party.turnIndex];
+
+    let opponent = null;
+
+    if (game === "arm wrestle" || game === "draw off") {
+
+        const possibleOpponents = party.players.filter(p => p.id !== player.id);
+
+        if (possibleOpponents.length > 0) {
+            opponent = possibleOpponents[
+                Math.floor(Math.random() * possibleOpponents.length)
+            ];
+        }
+    }
 
     let availableGames = [...miniGames];
 
@@ -46,6 +57,7 @@ function startTurn(code) {
 
     io.to(code).emit("turn", {
         player: player,
+        opponent: opponent,
         game: game
     });
 }
