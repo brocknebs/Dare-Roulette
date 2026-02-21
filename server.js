@@ -29,9 +29,13 @@ function startTurn(code) {
 
     const player = party.players[party.turnIndex];
 
+    let availableGames = [...miniGames];
+
+    const game = availableGames[Math.floor(Math.random() * availableGames.length)];
+
     let opponent = null;
 
-    if (game === "arm wrestle" || game === "draw off") {
+    if (game === "Arm Wrestle" || game === "Draw Off") {
 
         const possibleOpponents = party.players.filter(p => p.id !== player.id);
 
@@ -42,28 +46,11 @@ function startTurn(code) {
         }
     }
 
-    let availableGames = [...miniGames];
-
-    if (party.usedAutoDare)
-        availableGames = availableGames.filter(g => g !== "automatic dare");
-
-    if (party.usedPickDare)
-        availableGames = availableGames.filter(g => g !== "pick someone to do a dare");
-
-    const game = availableGames[Math.floor(Math.random() * availableGames.length)];
-
-    if (game === "automatic dare") party.usedAutoDare = true;
-    if (game === "pick someone to do a dare") party.usedPickDare = true;
-
     io.to(code).emit("turn", {
         player: player,
         opponent: opponent,
         game: game
     });
-}
-
-function generateCode() {
-    return Math.random().toString(36).substring(2,6).toUpperCase();
 }
 
 io.on("connection", (socket) => {

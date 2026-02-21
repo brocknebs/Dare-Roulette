@@ -1,5 +1,7 @@
 const socket = io();
 
+let currentPlayers = [];
+
 let partyCode = null;
 
 let isHost = false;
@@ -80,6 +82,16 @@ function versusWinner(winnerId, loserId) {
     socket.emit("nextTurn", partyCode);
 }
 
+function loseLife(playerId) {
+
+    socket.emit("loseLife", {
+        code: partyCode,
+        playerId: playerId
+    });
+
+    socket.emit("nextTurn", partyCode);
+}
+
 socket.on("partyCode", (code) => {
 
     partyCode = code;
@@ -94,7 +106,7 @@ socket.on("turn", ({player, opponent, game}) => {
 
     const area = document.getElementById("miniGameArea");
 
-    if (game === "two truths and a lie") {
+    if (game === "Two Truths and a Lie") {
 
         area.innerHTML = `
             <h2>${player.name}'s Turn</h2>
@@ -109,7 +121,7 @@ socket.on("turn", ({player, opponent, game}) => {
             <button onclick="failGame('${player.id}')">Fail</button>
         `;
 
-    } else if (game === "arm wrestle" && opponent) {
+    } else if (game === "Arm Wrestle" && opponent) {
 
         area.innerHTML = `
             <h2>Arm Wrestle</h2>
@@ -126,7 +138,7 @@ socket.on("turn", ({player, opponent, game}) => {
             </button>
         `;
 
-    } else if (game === "draw off" && opponent) {
+    } else if (game === "Draw Off" && opponent) {
 
         area.innerHTML = `
             <h2>Draw Off</h2>
@@ -144,12 +156,86 @@ socket.on("turn", ({player, opponent, game}) => {
             </button>
         `;
 
+    } else if (
+        game === "Cars" ||
+        game === "Categories" ||
+        game === "Rhymes" ||
+        game === "Stone Face" ||
+        game === "Reach For The Sky"
+    ) {
+
+        let instruction = "";
+
+        if (game === "Cars") {
+            instruction = `
+            In a circle pretend you are steering to the person to your right.
+            You say "SKIRT" as you steer.
+            If you decide to steer left, you say "SCREETCH."
+            First person who makes a mistake or hesitates loses a life.
+            `;
+        }
+
+        if (game === "Categories") {
+            instruction = `
+            ${player.name} picks a category.
+            Going clockwise, everybody in the group must name something
+            in that category without hesitation or repeating.
+            First person to make a mistake loses a life.
+            `;
+        }
+
+        if (game === "Rhymes") {
+            instruction = `
+            ${player.name} picks a word.
+            Going clockwise, everybody in the group must say a word
+            that rhymes without hesitation or repeating.
+            First person to make a mistake loses a life.
+            `;
+        }
+
+        if (game === "Stone Face") {
+            instruction = `
+            Starting with ${player.name}, look at a random person.
+            Ask them a question. Then that person must ask someone else
+            an original question.
+            No one can laugh, smile, hesitate, or say a non-question.
+            Loser loses a life.
+            `;
+        }
+
+        if (game === "Reach For The Sky") {
+            instruction = `
+            THERE IS NO TIME!
+            EVERYBODY STAND UP FULLY AND SIT DOWN!!!
+            Last person to sit upon their buttocks must forfeit a life.
+            `;
+        }
+
+        area.innerHTML = `
+            <h2>${game.toUpperCase()}</h2>
+            <p>${instruction}</p>
+            <div id="loseButtons"></div>
+        `;
+
+        const buttonArea = document.getElementById("loseButtons");
+
+        currentPlayers.forEach(p => {
+
+            const btn = document.createElement("button");
+            btn.textContent = p.name;
+
+            btn.onclick = () => {
+                loseLife(p.id);
+            };
+
+            buttonArea.appendChild(btn);
+        });
     } else {
 
         area.innerHTML =
             "<h2>" + player.name + "'s turn</h2>" +
             "<h3>Game: " + game + "</h3>";
-    }
+    } 
 });
 
 socket.on("host", (value) => {
@@ -163,6 +249,8 @@ socket.on("host", (value) => {
 
 socket.on("players", (players) => {
 
+    currentPlayers = players;
+
     const list = document.getElementById("playerList");
 
     list.innerHTML = "";
@@ -175,9 +263,7 @@ socket.on("players", (players) => {
 
         list.appendChild(li);
     });
-
 });
-
 
 socket.on("dares", (dares) => {
 
