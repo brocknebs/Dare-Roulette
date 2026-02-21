@@ -48,14 +48,16 @@ io.on("connection", (socket) => {
 
     socket.on("startGame", (code) => {
 
-        const party = parties[code];
-        if (!party) return;
-        if (party.host !== socket.id) return;
+    const party = parties[code];
+    if (!party) return;
+    if (party.host !== socket.id) return;
 
-        party.phase = "writing";
+    party.phase = "writing";
 
-        io.to(code).emit("phase", "writing");
-    });
+    io.to(code).emit("phase", "writing");
+
+    startWritingTimer(code, 150); // 2.5 minutes
+});
 
     socket.on("disconnect", () => {
 
@@ -92,6 +94,35 @@ function joinParty(socket, code, name, gender, isHost) {
 
     io.to(code).emit("players", party.players);
 }
+
+function startWritingTimer(code, seconds) {
+
+    let timeLeft = seconds;
+
+    const interval = setInterval(() => {
+
+        const party = parties[code];
+        if (!party) {
+            clearInterval(interval);
+            return;
+        }
+
+        io.to(code).emit("timer", timeLeft);
+
+        timeLeft--;
+
+        if (timeLeft < 0) {
+
+            clearInterval(interval);
+
+            party.phase = "playing";
+
+            io.to(code).emit("phase", "playing");
+        }
+
+    }, 1000);
+}
+
 
 http.listen(3000, () => {
     console.log("Server running");
