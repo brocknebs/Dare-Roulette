@@ -58,6 +58,16 @@ socket.on("partyCode", (code) => {
     document.getElementById("lobbyCode").innerText = code;
 });
 
+socket.on("turn", ({player, game}) => {
+
+    const area = document.getElementById("miniGameArea");
+
+    area.innerHTML =
+        "<h2>" + player.name + "'s turn</h2>" +
+        "<h3>Game: " + game + "</h3>";
+});
+
+
 socket.on("host", (value) => {
 
     isHost = value;

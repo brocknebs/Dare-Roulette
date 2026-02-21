@@ -7,11 +7,67 @@ app.use(express.static("public"));
 
 let parties = {};
 
+const miniGames = [
+"Trivia",
+"Arm Wrestle",
+"Next Dude",
+"Next Dudette",
+"Automatic Dare",
+"Two Truths and a Lie",
+"Cars",
+"Rhymes",
+"Draw Off",
+"Pick Someone To Do a Dare",
+"Reach For The Sky",
+"Team Vote"
+];
+
+function startTurn(code) {
+
+    const party = parties[code];
+    if (!party) return;
+
+    if (party.players.length === 0) return;
+
+    const player = party.players[party.turnIndex];
+
+    let availableGames = [...miniGames];
+
+    if (party.usedAutoDare)
+        availableGames = availableGames.filter(g => g !== "automatic dare");
+
+    if (party.usedPickDare)
+        availableGames = availableGames.filter(g => g !== "pick someone to do a dare");
+
+    const game = availableGames[Math.floor(Math.random() * availableGames.length)];
+
+    if (game === "automatic dare") party.usedAutoDare = true;
+    if (game === "pick someone to do a dare") party.usedPickDare = true;
+
+    io.to(code).emit("turn", {
+        player: player,
+        game: game
+    });
+}
+
 function generateCode() {
     return Math.random().toString(36).substring(2,6).toUpperCase();
 }
 
 io.on("connection", (socket) => {
+
+    socket.on("nextTurn", (code) => {
+
+        const party = parties[code];
+        if (!party) return;
+
+        party.turnIndex++;
+
+        if (party.turnIndex >= party.players.length)
+            party.turnIndex = 0;
+
+        startTurn(code);
+    });
 
     socket.on("loseLife", ({code, playerId}) => {
 
@@ -58,8 +114,12 @@ io.on("connection", (socket) => {
             host: socket.id,
             players: [],
             dares: [],
-            phase: "lobby"
+            phase: "lobby",
+            turnIndex: 0,
+            usedAutoDare: false,
+            usedPickDare: false
         };
+
 
 
         joinParty(socket, code, name, gender, true);
@@ -151,6 +211,8 @@ function startWritingTimer(code, seconds) {
             party.phase = "playing";
 
             io.to(code).emit("phase", "playing");
+
+            startTurn(code);
         }
 
     }, 1000);

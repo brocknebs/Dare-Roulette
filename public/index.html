@@ -48,17 +48,24 @@
 
 <h1 id="timer"></h1>
 
+<!-- Player List -->
+<div id="gamePlayers">
+<h3>Players</h3>
+<ul id="playerList"></ul>
+</div>
+
+<!-- Dare Writing -->
 <div id="dareArea" class="hidden">
-
 <input id="dareInput" placeholder="Type a dare">
-
 <button onclick="submitDare()">Submit Dare</button>
-
 <ul id="dareList"></ul>
+</div>
+
+<!-- Mini Game Display -->
+<div id="miniGameArea"></div>
 
 </div>
 
-</div>
 
 
 <script src="/socket.io/socket.io.js"></script>
