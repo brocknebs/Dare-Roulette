@@ -13,15 +13,28 @@ function generateCode() {
 
 io.on("connection", (socket) => {
 
-    socket.on("createParty", ({name, gender}) => {
+    socket.on("submitDare", ({code, dare}) => {
 
+        const party = parties[code];
+        if (!party) return;
+
+        party.dares.push(dare);
+
+        io.to(code).emit("dares", party.dares);
+    });
+
+
+    socket.on("createParty", ({name, gender}) => {
+    
         const code = generateCode();
 
         parties[code] = {
             host: socket.id,
             players: [],
+            dares: [],
             phase: "lobby"
         };
+
 
         joinParty(socket, code, name, gender, true);
     });

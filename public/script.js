@@ -33,6 +33,21 @@ function joinParty() {
     socket.emit("joinParty", {name, gender, code});
 }
 
+function submitDare() {
+
+    const dare = document.getElementById("dareInput").value;
+
+    if (!dare) return;
+
+    socket.emit("submitDare", {
+        code: partyCode,
+        dare: dare
+    });
+
+    document.getElementById("dareInput").value = "";
+}
+
+
 socket.on("partyCode", (code) => {
 
     partyCode = code;
@@ -69,17 +84,43 @@ socket.on("players", (players) => {
 
 });
 
+socket.on("dares", (dares) => {
+
+    const list = document.getElementById("dareList");
+
+    list.innerHTML = "";
+
+    dares.forEach(d => {
+
+        const li = document.createElement("li");
+        li.textContent = d;
+
+        list.appendChild(li);
+    });
+
+});
+
+
 socket.on("phase", (phase) => {
 
     const text = document.getElementById("phaseText");
 
     if (phase === "lobby") text.textContent = "Waiting for host";
-    if (phase === "writing") text.textContent = "Write Dares!";
-    if (phase === "playing") text.textContent = "Game Time";
+
+    if (phase === "writing") {
+        text.textContent = "Write Dares!";
+        document.getElementById("dareArea").classList.remove("hidden");
+    }
+
+    if (phase === "playing") {
+        text.textContent = "Game Time";
+        document.getElementById("dareArea").classList.add("hidden");
+    }
 
     document.getElementById("game").classList.remove("hidden");
     document.getElementById("lobby").classList.add("hidden");
 });
+
 
 socket.on("timer", (time) => {
 
