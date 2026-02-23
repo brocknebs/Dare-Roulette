@@ -92,6 +92,15 @@ function loseLife(playerId) {
     socket.emit("nextTurn", partyCode);
 }
 
+function completeDare() {
+    socket.emit("completeDare", partyCode);
+}
+
+function getAutomaticDare() {
+    socket.emit("automaticDare", partyCode);
+}
+
+
 socket.on("partyCode", (code) => {
 
     partyCode = code;
@@ -155,6 +164,41 @@ socket.on("turn", ({player, opponent, game}) => {
                 ${opponent.name}
             </button>
         `;
+
+    } else if (game === "Automatic Dare") {
+
+        area.innerHTML = `
+            <h2>${player.name}'s Turn</h2>
+            <h3>Automatic Dare</h3>
+            <button onclick="getAutomaticDare()">Get Your Dare</button>
+        `;
+
+    } else if (game === "Pick Someone To Do a Dare") {
+
+        area.innerHTML = `
+            <h2>${player.name} Picks Someone</h2>
+            <div id="pickButtons"></div>
+        `;
+
+        const pickArea = document.getElementById("pickButtons");
+
+        currentPlayers
+            .filter(p => p.id !== player.id)
+            .forEach(p => {
+
+                const btn = document.createElement("button");
+                btn.textContent = p.name;
+
+                btn.onclick = () => {
+                    socket.emit("pickDarePlayer", {
+                        code: partyCode,
+                        targetId: p.id
+                    });
+                };
+
+                pickArea.appendChild(btn);
+            });
+
 
     } else if (
         game === "Cars" ||
@@ -311,6 +355,18 @@ socket.on("timer", (time) => {
     document.getElementById("timer").textContent =
         minutes + ":" + seconds.toString().padStart(2, "0");
 });
+
+socket.on("dareAssigned", ({playerId, name, text}) => {
+
+    const area = document.getElementById("miniGameArea");
+
+    area.innerHTML = `
+        <h2>${name} HAS BEEN ASSIGNED A DARE</h2>
+        <p>${text}</p>
+        <button onclick="completeDare()">Dare Completed</button>
+    `;
+});
+
 
 function startGame() {
     socket.emit("startGame", partyCode);

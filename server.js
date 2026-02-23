@@ -59,6 +59,80 @@ function startTurn(code) {
 
 io.on("connection", (socket) => {
 
+    socket.on("pickDarePlayer", ({code, targetId}) => {
+
+        const party = parties[code];
+        if (!party || party.dares.length === 0) return;
+
+        const target = party.players.find(p => p.id === targetId);
+        if (!target) return;
+
+        const randomIndex = Math.floor(Math.random() * party.dares.length);
+        const dare = party.dares[randomIndex];
+
+        party.currentDare = {
+            playerId: target.id,
+            dareIndex: randomIndex,
+            text: dare
+        };
+
+        io.to(code).emit("dareAssigned", {
+            playerId: target.id,
+            name: target.name,
+            text: dare
+        });
+    });
+
+
+    socket.on("automaticDare", (code) => {
+
+        const party = parties[code];
+        if (!party || party.dares.length === 0) return;
+
+        const player = party.players[party.turnIndex];
+        if (!player) return;
+
+        const randomIndex = Math.floor(Math.random() * party.dares.length);
+        const dare = party.dares[randomIndex];
+
+        party.currentDare = {
+            playerId: player.id,
+            dareIndex: randomIndex,
+            text: dare
+        };
+
+        io.to(code).emit("dareAssigned", {
+            playerId: player.id,
+            name: player.name,
+            text: dare
+        });
+    });
+
+
+    socket.on("completeDare", (code) => {
+
+        const party = parties[code];
+        if (!party || !party.currentDare) return;
+
+        const { playerId, dareIndex } = party.currentDare;
+
+        const player = party.players.find(p => p.id === playerId);
+        if (!player) return;
+
+        // Remove dare from list
+        party.dares.splice(dareIndex, 1);
+
+        // Reset player life
+        player.lives = 1;
+
+        party.currentDare = null;
+
+        io.to(code).emit("players", party.players);
+        io.to(code).emit("dares", party.dares);
+
+    });
+
+
     socket.on("nextTurn", (code) => {
 
         const party = parties[code];
@@ -82,7 +156,27 @@ io.on("connection", (socket) => {
 
         player.lives--;
 
-        io.to(code).emit("players", party.players);
+        if (player.lives <= 0 && party.dares.length > 0) {
+
+            const randomIndex = Math.floor(Math.random() * party.dares.length);
+            const dare = party.dares[randomIndex];
+
+            party.currentDare = {
+                playerId: player.id,
+                dareIndex: randomIndex,
+                text: dare
+            };
+
+            io.to(code).emit("dareAssigned", {
+                playerId: player.id,
+                name: player.name,
+                text: dare
+            });
+
+        } else {
+            io.to(code).emit("players", party.players);
+        }
+
     });
 
     socket.on("gainLife", ({code, playerId}) => {
