@@ -7,6 +7,10 @@ app.use(express.static("public"));
 
 let parties = {};
 
+function generateCode() {
+    return Math.random().toString(36).substring(2,6).toUpperCase();
+}
+
 const miniGames = [
 "Arm Wrestle",
 "Automatic Dare",
@@ -218,6 +222,8 @@ function startWritingTimer(code, seconds) {
 }
 
 
-http.listen(3000, () => {
-    console.log("Server running");
+const PORT = process.env.PORT || 3000;
+
+http.listen(PORT, () => {
+    console.log("Server running on port", PORT);
 });
