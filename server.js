@@ -76,6 +76,8 @@ io.on("connection", (socket) => {
             text: dare
         };
 
+        party.inDare = true;
+
         io.to(code).emit("dareAssigned", {
             playerId: target.id,
             name: target.name,
@@ -100,6 +102,8 @@ io.on("connection", (socket) => {
             dareIndex: randomIndex,
             text: dare
         };
+
+        party.inDare = true;
 
         io.to(code).emit("dareAssigned", {
             playerId: player.id,
@@ -126,6 +130,8 @@ io.on("connection", (socket) => {
         player.lives = 1;
 
         party.currentDare = null;
+        party.inDare = false;
+        startTurn(code);
 
         io.to(code).emit("players", party.players);
         io.to(code).emit("dares", party.dares);
@@ -136,7 +142,7 @@ io.on("connection", (socket) => {
     socket.on("nextTurn", (code) => {
 
         const party = parties[code];
-        if (!party) return;
+        if (!party || party.inDare) return;
 
         party.turnIndex++;
 
@@ -166,6 +172,8 @@ io.on("connection", (socket) => {
                 dareIndex: randomIndex,
                 text: dare
             };
+            
+            party.inDare = true;
 
             io.to(code).emit("dareAssigned", {
                 playerId: player.id,
@@ -204,7 +212,7 @@ io.on("connection", (socket) => {
 
 
     socket.on("createParty", ({name, gender}) => {
-    
+        
         const code = generateCode();
 
         parties[code] = {
@@ -214,7 +222,9 @@ io.on("connection", (socket) => {
             phase: "lobby",
             turnIndex: 0,
             usedAutoDare: false,
-            usedPickDare: false
+            usedPickDare: false,
+            currentDare: null,
+            inDare: false
         };
 
 
