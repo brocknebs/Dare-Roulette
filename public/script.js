@@ -295,17 +295,27 @@ socket.on("players", (players) => {
 
     currentPlayers = players;
 
-    const list = document.getElementById("playerList");
+    const lobbyList = document.getElementById("lobbyPlayerList");
+    const gameList = document.getElementById("gamePlayerList");
 
-    list.innerHTML = "";
+    if (lobbyList) lobbyList.innerHTML = "";
+    if (gameList) gameList.innerHTML = "";
 
     players.forEach(p => {
 
-        const li = document.createElement("li");
+        const text = `${p.name} — Lives: ${p.lives}`;
 
-        li.textContent = `${p.name} — Lives: ${p.lives}`;
+        if (lobbyList) {
+            const li = document.createElement("li");
+            li.textContent = text;
+            lobbyList.appendChild(li);
+        }
 
-        list.appendChild(li);
+        if (gameList) {
+            const li = document.createElement("li");
+            li.textContent = text;
+            gameList.appendChild(li);
+        }
     });
 });
 
