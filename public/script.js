@@ -303,7 +303,7 @@ socket.on("players", (players) => {
 
         const li = document.createElement("li");
 
-        li.textContent = `${p.name} (${p.lives})`;
+        li.textContent = `${p.name} — Lives: ${p.lives}`;
 
         list.appendChild(li);
     });
@@ -322,6 +322,10 @@ socket.on("dares", (dares) => {
 
         list.appendChild(li);
     });
+
+    document.getElementById("dareCounter").textContent =
+        "Dares Remaining: " + dares.length;
+
 
 });
 
